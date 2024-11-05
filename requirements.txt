@@ -1,0 +1,4 @@
+Flask # Flask web framework
+requests # HTTP library for making requests
+flask-cors # CORS support for Flask
+pandas # Data manipulation and analysis library
