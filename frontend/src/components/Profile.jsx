@@ -16,8 +16,9 @@ function Profile() {
   const [currentPlaying, setCurrentPlaying] = useState(null);
 
   useEffect(() => {
+    console.log('fetching')
+    /*
     const fetchProfile = async () => {
-      console.log('fetching')
       try {
         const response = await fetch('http://18.218.68.142:5001/profile', {
           method: 'GET',
@@ -42,7 +43,7 @@ function Profile() {
         alert(error)
       }
     };
-    fetchProfile();
+    fetchProfile();*/
   }, [navigate]);
 
   const phrases = ['Tuning into your vibes...',
