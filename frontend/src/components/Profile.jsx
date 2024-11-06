@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUpRightFromSquare, faX, faPlay, faPause } from '@fortawesome/free-solid-svg-icons';
 
-
 function Profile() {
   const [username, setUsername] = useState('');
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('http://localhost:5000/profile', {
+        const response = await fetch('http://18.218.68.142:5001/profile', {
           method: 'GET',
           credentials: 'include'
         });
@@ -75,7 +74,7 @@ function Profile() {
 
   const handleSignOut = () => {
     stopCurrentAudio()
-    fetch('http://localhost:5000/logout', {
+    fetch('http://18.218.68.142:5001/logout', {
       method: 'GET',
       credentials: 'include',
     })
@@ -113,7 +112,7 @@ function Profile() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    fetch('http://localhost:5000/recommendations', {
+    fetch('http://18.218.68.142:5001/recommendations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -178,7 +177,7 @@ function Profile() {
     stopCurrentAudio()
     e.preventDefault();
     const myPlaylist = playlist.map(item => item.uri);
-    fetch('http://localhost:5000/build', {
+    fetch('http://18.218.68.142:5001/build', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

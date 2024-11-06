@@ -16,13 +16,18 @@ load_dotenv()
 # Initialize the Flask application
 application = Flask(__name__)
 
-CORS(application, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
-application.secret_key = os.urandom(24)
+# Set up allowed origins dynamically based on the environment
+frontend_origin = "http://localhost:5173"  # Keep localhost for testing
+backend_origin = "http://18.218.68.142:5001"  # Your EC2 production IP
 
-application.config.update(
-    SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=True
-)
+# Configure CORS for the application
+CORS(application, resources={r"/*": {"origins": [frontend_origin, backend_origin]}}, supports_credentials=True)
+
+application.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Ensure this key is set and remains consistent
+application.config['SESSION_COOKIE_SECURE'] = True  # Set to False for local development if using HTTP
+application.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Or 'None' if using secure cross-site cookies
+application.config['SESSION_PERMANENT'] = False  # Consider disabling permanent sessions if you only need temporary data
+
 
 CLIENT_ID = os.getenv('CLIENT_ID')
 CLIENT_SECRET = os.getenv('CLIENT_SECRET')
@@ -74,9 +79,14 @@ target_features = {
     'datenight': "min_acousticness={acousticness}&min_valence={valence}&max_tempo={tempo}&max_energy={energy}"
 }
 
+credentials = {} # use credentials global object in place of session for demo version
 
 # API ENDPOINTS
 
+
+@application.route('/ping')
+def ping():
+    return jsonify('pong!')
 
 @application.route('/login')
 def login():
@@ -115,9 +125,11 @@ def callback():
         if response.status_code != 200:
             raise ValueError(f"Failed to fetch token")
         token_info = response.json()
-        session['access_token'] = token_info['access_token']
-        session['refresh_token'] = token_info['refresh_token']
-        session['expires_at'] = datetime.datetime.now().timestamp() + token_info['expires_in']
+        #session['access_token'] = token_info['access_token']
+        #session['refresh_token'] = token_info['refresh_token']
+        #session['expires_at'] = datetime.datetime.now().timestamp() + token_info['expires_in']
+        global credentials  # Declare 'test' as global to modify it
+        credentials['access_token'] = token_info['access_token']
         return redirect('http://localhost:5173/profile') # redirects to react app
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -127,44 +139,49 @@ def callback():
 @application.route('/profile', methods=['GET', 'OPTIONS'])
 def profile():
     # Handle preflight requests
-    if request.method == 'OPTIONS':
+    '''if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
-        return add_cors_headers(response)    
+        return add_cors_headers(response)'''
     try:
-        if 'access_token' not in session:  # Check if the user is authenticated
+        # Check if the user is authenticated
+        if 'access_token' not in credentials:
+            print("Access token missing in credentials")
             return redirect('/login')
-        if datetime.datetime.now().timestamp() > session['expires_at']:  # Check if the access token is expired
-            return redirect('/refresh-token')
-        headers = {'Authorization': f"Bearer {session['access_token']}"}
+        
+        headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
         endpoints = {
             'profile': 'me',  # Endpoint to get profile info
-            'top_artists': 'me/top/artists', # get top artists
-            'top_tracks': 'me/top/tracks' # get top tracks
+            'top_artists': 'me/top/artists',  # Get top artists
+            'top_tracks': 'me/top/tracks'     # Get top tracks
         }
-        def fetch_data(endpoint):  # Helper function to fetch data from Spotify
+
+        # Call each endpoint sequentially
+        profile_info = {}
+        for key, endpoint in endpoints.items():
             response = requests.get(API_BASE_URL + endpoint, headers=headers)
-            print(response.json())
-            return response.json()
-        with ThreadPoolExecutor() as executor:
-            results = executor.map(fetch_data, endpoints.values())
-            profile_info = {key: result for key, result in zip(endpoints.keys(), results)}
+            profile_info[key] = response.json()
+
+        # Process retrieved data
         artist_ids = [artist['id'] for artist in profile_info['top_artists']['items']]
         track_ids = [track['id'] for track in profile_info['top_tracks']['items']]
         avg_audio_features = fetch_average_audio_features(track_ids)
         top_genres = fetch_top_genres(profile_info)
-        session['avg_audio_features'] = avg_audio_features # saves user average audio features
-        session['top_artists'] = artist_ids # saves user top artists
-        session['top_genres'] = top_genres # saves user top genres
-        session['user_id'] = profile_info['profile']['id']
+
+        # Save data in the session
+        credentials['avg_audio_features'] = avg_audio_features  # Saves user average audio features
+        credentials['top_artists'] = artist_ids                # Saves user top artists
+        credentials['top_genres'] = top_genres                 # Saves user top genres
+        credentials['user_id'] = profile_info['profile']['id']
 
         response = jsonify(profile_info)
         return add_cors_headers(response)
+    
     except Exception as e:
         print(f"Error: {str(e)}")  # Print the exception message
         response = jsonify({"message": f"Unable to retrieve user profile. {str(e)}"})
-        return add_cors_headers(response), 500
     
-@application.route('/refresh-token')
+# no refresh token since we are using credentials object instead of session
+'''@application.route('/refresh-token')
 def refresh_token():
     try:
         if 'refresh_token' not in session:
@@ -183,13 +200,14 @@ def refresh_token():
             return redirect('http://localhost:5173/profile')
     except Exception as e:
         print(f"Error: {str(e)}")  # Print the exception message
-        return jsonify({"message": f"Unable to refresh authentication token. {str(e)}"}), 500 
+        return jsonify({"message": f"Unable to refresh authentication token. {str(e)}"}), 500'''
        
 # logout/switch user
 @application.route('/logout')
 def logout():
     try:
-        session.clear() # clear session, redirect to login page
+        # session.clear() # clear session, redirect to login page
+        credentials.clear()
         return jsonify({"message": "Logged out successfully"}), 200
     except Exception as e:
         print(f"Error: {str(e)}")  # Print the exception message
@@ -199,10 +217,10 @@ def logout():
 @application.route('/recommendations', methods=['POST'])
 def recommendations():
     try:
-        if 'access_token' not in session:  # Check if the user is authenticated
+        if 'access_token' not in credentials:  # Check if the user is authenticated
             return redirect('/login')
-        if datetime.datetime.now().timestamp() > session['expires_at']:  # Check if the access token is expired
-            return redirect('/refresh-token')
+        '''if datetime.datetime.now().timestamp() > session['expires_at']:  # Check if the access token is expired
+            return redirect('/refresh-token')'''
         data = request.json
         activity = data.get('activity')  # selected activity from user on front end
         num_of_songs = 100
@@ -221,21 +239,18 @@ def recommendations():
 @application.route('/build', methods=['POST'])
 def build():
     try:
-        if 'access_token' not in session:  # Check if the user is authenticated
+        if 'access_token' not in credentials:  # Check if the user is authenticated
             return redirect('/login')
-        if datetime.datetime.now().timestamp() > session['expires_at']:  # Check if the access token is expired
-            return redirect('/refresh-token')
+        '''if datetime.datetime.now().timestamp() > session['expires_at']:  # Check if the access token is expired
+            return redirect('/refresh-token')'''
         data = request.json
         playlist_name = data.get('name')
         playlist_songs = data.get('songs')
         res = ''
         playlist_id = create_spotify_playlist(playlist_name)
         if playlist_id:
-            res = add_songs_to_playlist(playlist_id, playlist_songs)                
-        response = jsonify(res)
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        return response
+            response = add_songs_to_playlist(playlist_id, playlist_songs)                
+        return jsonify(response)
     except Exception as e:
         print(f"Error: {str(e)}")  # Print the exception message
         return jsonify({"message": f"Unable to build playlist. {str(e)}"}), 500
@@ -253,7 +268,7 @@ def add_cors_headers(response):
 
 def fetch_average_audio_features(track_ids): # finds and returns average audio features upon user login
     url = f"{API_BASE_URL}audio-features"
-    headers = {'Authorization': f"Bearer {session['access_token']}"}
+    headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
     params = {'ids': ','.join(track_ids)}
     response = requests.get(url, headers=headers, params=params)
     if not response.ok:
@@ -308,10 +323,10 @@ def build_seed_arrays(matching_playlists, activity):
         seed_artists.append(top_artist_and_genre['artist'])
         seed_genres.append(top_artist_and_genre['genre'])
     else:
-        add_unique_item(seed_artists, session['top_artists'])
-        add_unique_item(seed_genres, session['top_genres'])
+        add_unique_item(seed_artists, credentials['top_artists'])
+        add_unique_item(seed_genres, credentials['top_genres'])
 
-    add_unique_item(seed_genres, session['top_genres'])
+    add_unique_item(seed_genres, credentials['top_genres'])
 
     # Select a unique popular artist and genre that aren't already in seeds
     while True:
@@ -327,7 +342,7 @@ def build_seed_arrays(matching_playlists, activity):
 
 def fetch_user_playlists(): # returns all user playlists
     url = f"{API_BASE_URL}me/playlists"
-    headers = {'Authorization': f"Bearer {session['access_token']}"}
+    headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
     response = requests.get(url, headers=headers)
     if not response.ok:
         raise ValueError(f"Failed to fetch user playlists for analysis")
@@ -338,7 +353,7 @@ import requests
 
 def get_top_artist_and_genre(playlist_id):
     url = f"{API_BASE_URL}playlists/{playlist_id}/tracks"
-    headers = {'Authorization': f"Bearer {session['access_token']}"}    
+    headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
     response = requests.get(url, headers=headers)
     if not response.ok:
         raise ValueError("Failed to analyze artist and genre information from playlists")
@@ -383,7 +398,7 @@ def random_popular_playlist(search_term): # find random popular playlist related
         'type': 'playlist',  # search for playlists
         'limit': 20
     }
-    headers = {'Authorization': f"Bearer {session['access_token']}"}
+    headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
     response = requests.get(url, headers=headers, params=params)
     if not response.ok:
         raise ValueError(f"API response was not ok")        
@@ -398,16 +413,14 @@ def get_recommendations(seed_artists, seed_genres, num_of_songs, activity): # re
     base_url =  f'https://api.spotify.com/v1/recommendations?seed_artists={seed_artists[0]},{seed_artists[1]}&seed_genres={seed_genres[0]},{seed_genres[1]},{seed_genres[2]}&limit={num_of_songs}'
     activity_params = target_features.get(activity, "")
     formatted_params = activity_params.format(
-        energy=session['avg_audio_features']['energy'],
-        tempo=session['avg_audio_features']['tempo'],
-        danceability=session['avg_audio_features']['danceability'],
-        valence=session['avg_audio_features']['valence'],
-        acousticness=session['avg_audio_features']['acousticness'],
+        energy=credentials['avg_audio_features']['energy'],
+        tempo=credentials['avg_audio_features']['tempo'],
+        danceability=credentials['avg_audio_features']['danceability'],
+        valence=credentials['avg_audio_features']['valence'],
+        acousticness=credentials['avg_audio_features']['acousticness'],
     )
     url = f"{base_url}&{formatted_params}"
-    headers = {
-        'Authorization': f"Bearer {session['access_token']}"
-    }
+    headers = {'Authorization': f"Bearer {credentials.get('access_token')}"}
     response = requests.get(url, headers=headers)
     if not response.ok:
         raise ValueError(f"API response was not ok")
@@ -415,9 +428,9 @@ def get_recommendations(seed_artists, seed_genres, num_of_songs, activity): # re
     return recommendations
 
 def create_spotify_playlist(playlist_name):
-    url = f"{API_BASE_URL}users/{session['user_id']}/playlists"
+    url = f"{API_BASE_URL}users/{credentials['user_id']}/playlists"
     headers = {
-        "Authorization": f"Bearer {session['access_token']}",
+        "Authorization": f"Bearer {credentials.get('access_token')}",
         "Content-Type": "application/json"
     }
     data = {
@@ -433,7 +446,7 @@ def create_spotify_playlist(playlist_name):
 def add_songs_to_playlist(playlist_id, track_uris):
     url = f"{API_BASE_URL}playlists/{playlist_id}/tracks"
     headers = {
-        "Authorization": f"Bearer {session['access_token']}",
+        "Authorization": f"Bearer {credentials.get('access_token')}",
         "Content-Type": "application/json"
     }
     data = {
