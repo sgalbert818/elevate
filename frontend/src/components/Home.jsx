@@ -14,7 +14,7 @@ function Home() {
           your unique listening history and the most popular 
           playlists to make sure every track hits the right vibe. 
           Get ready to elevate your music experience!</p>
-        <a href="https://z3pqkq0qef.execute-api.us-east-2.amazonaws.com/login"><button>Connect to Spotify</button></a>      
+        <a href="http://18.218.68.142:5001/login"><button>Connect to Spotify</button></a>      
       </div>
     </div>
   );

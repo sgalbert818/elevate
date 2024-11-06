@@ -16,7 +16,7 @@ function Profile() {
   const [currentPlaying, setCurrentPlaying] = useState(null);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    /*const fetchProfile = async () => {
       try {
         const response = await fetch('https://9hauiiq4r0.execute-api.us-east-2.amazonaws.com/profile', {
           method: 'GET',
@@ -41,7 +41,7 @@ function Profile() {
         alert(error)
       }
     };
-    fetchProfile();
+    fetchProfile();*/
   }, [navigate]);
 
   const phrases = ['Tuning into your vibes...',
