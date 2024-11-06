@@ -75,13 +75,13 @@ function Profile() {
 
   const handleSignOut = () => {
     stopCurrentAudio()
-    fetch('http://18.218.68.142:5001/logout', {
+    fetch('https://tg2u62c04h.execute-api.us-east-2.amazonaws.com/logout', {
       method: 'GET',
       credentials: 'include',
     })
       .then(response => {
         if (response.ok) {
-          window.location.href = 'http://localhost:5173';
+          window.location.href = 'https://main.d30okcwstuwyij.amplifyapp.com';
         } else {
           return response.json().then(errorData => {
             throw new Error(errorData.message || 'Logout failed.');
