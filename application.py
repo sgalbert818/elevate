@@ -8,7 +8,10 @@ import pandas as pd
 from collections import Counter
 import math
 import random
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 # Initialize the Flask application
 application = Flask(__name__)
@@ -21,8 +24,8 @@ application.config.update(
     SESSION_COOKIE_SECURE=True
 )
 
-CLIENT_ID = '33b2524ee7064d8b9c6902a322c2bf40'
-CLIENT_SECRET = '1a74bc91815442e5994bc61df0acefc2'
+CLIENT_ID = os.getenv('CLIENT_ID')
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
 REDIRECT_URI = 'http://localhost:5000/callback'
 AUTH_URL = 'https://accounts.spotify.com/authorize'
 TOKEN_URL = 'https://accounts.spotify.com/api/token'
