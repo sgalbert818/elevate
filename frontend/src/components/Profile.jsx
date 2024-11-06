@@ -17,6 +17,7 @@ function Profile() {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      console.log('fetching')
       try {
         const response = await fetch('http://18.218.68.142:5001/profile', {
           method: 'GET',
