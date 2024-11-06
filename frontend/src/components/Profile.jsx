@@ -17,9 +17,10 @@ function Profile() {
 
   useEffect(() => {
     console.log('fetching')
-    /*const fetchProfile = async () => {
+    /*
+    const fetchProfile = async () => {
       try {
-        const response = await fetch('https://k09zqg37e8.execute-api.us-east-2.amazonaws.com/profile', {
+        const response = await fetch('http://18.218.68.142:5001/profile', {
           method: 'GET',
           credentials: 'include'
         });
