@@ -17,11 +17,12 @@ load_dotenv()
 application = Flask(__name__)
 
 # Set up allowed origins dynamically based on the environment
-frontend_origin = "http://localhost:5173"  # Keep localhost for testing
+frontend_origin = "amplify url"  # Keep localhost for testing
+frontend_test = "http://localhost:5173"  # Keep localhost for testing
 backend_origin = "http://18.218.68.142:5001"  # Your EC2 production IP
 
 # Configure CORS for the application
-CORS(application, resources={r"/*": {"origins": [frontend_origin, backend_origin]}}, supports_credentials=True)
+CORS(application, resources={r"/*": {"origins": [frontend_test, backend_origin]}}, supports_credentials=True)
 
 application.config['SECRET_KEY'] = os.getenv('SECRET_KEY')  # Ensure this key is set and remains consistent
 application.config['SESSION_COOKIE_SECURE'] = True  # Set to False for local development if using HTTP
