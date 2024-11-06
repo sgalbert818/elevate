@@ -17,7 +17,7 @@ function Profile() {
 
   useEffect(() => {
     console.log('fetching')
-    const fetchProfile = async () => {
+    /*const fetchProfile = async () => {
       try {
         const response = await fetch('https://k09zqg37e8.execute-api.us-east-2.amazonaws.com/profile', {
           method: 'GET',
@@ -42,7 +42,7 @@ function Profile() {
         alert(error)
       }
     };
-    fetchProfile();
+    fetchProfile();*/
   }, [navigate]);
 
   const phrases = ['Tuning into your vibes...',
