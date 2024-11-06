@@ -16,9 +16,9 @@ function Profile() {
   const [currentPlaying, setCurrentPlaying] = useState(null);
 
   useEffect(() => {
-    /*const fetchProfile = async () => {
+    const fetchProfile = async () => {
       try {
-        const response = await fetch('https://9hauiiq4r0.execute-api.us-east-2.amazonaws.com/profile', {
+        const response = await fetch('http://18.218.68.142:5001/profile', {
           method: 'GET',
           credentials: 'include'
         });
@@ -41,7 +41,7 @@ function Profile() {
         alert(error)
       }
     };
-    fetchProfile();*/
+    fetchProfile();
   }, [navigate]);
 
   const phrases = ['Tuning into your vibes...',
@@ -80,7 +80,7 @@ function Profile() {
     })
       .then(response => {
         if (response.ok) {
-          window.location.href = 'https://main.d30okcwstuwyij.amplifyapp.com/';
+          window.location.href = 'http://localhost:5173';
         } else {
           return response.json().then(errorData => {
             throw new Error(errorData.message || 'Logout failed.');

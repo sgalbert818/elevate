@@ -17,7 +17,7 @@ load_dotenv()
 application = Flask(__name__)
 
 # Set up allowed origins dynamically based on the environment
-frontend_origin = "https://main.d30okcwstuwyij.amplifyapp.com"  # Keep localhost for testing
+frontend_origin = "http://localhost:5173"  # Keep localhost for testing
 backend_origin = "http://18.218.68.142:5001"  # Your EC2 production IP
 
 # Configure CORS for the application
@@ -130,7 +130,7 @@ def callback():
         #session['expires_at'] = datetime.datetime.now().timestamp() + token_info['expires_in']
         global credentials  # Declare 'test' as global to modify it
         credentials['access_token'] = token_info['access_token']
-        return redirect('https://main.d30okcwstuwyij.amplifyapp.com/profile') # redirects to react app
+        return redirect('http://localhost:5173/profile') # redirects to react app
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"message": f'Login failed. {str(e)}'}), 500
@@ -260,7 +260,7 @@ def build():
 
 
 def add_cors_headers(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://main.d30okcwstuwyij.amplifyapp.com')
+    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
