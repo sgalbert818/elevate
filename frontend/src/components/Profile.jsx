@@ -18,7 +18,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('http://18.218.68.142:5001/profile', {
+        const response = await fetch('https://18.218.68.142:5001/profile', {
           method: 'GET',
           credentials: 'include'
         });
@@ -74,7 +74,7 @@ function Profile() {
 
   const handleSignOut = () => {
     stopCurrentAudio()
-    fetch('http://18.218.68.142:5001/logout', {
+    fetch('https://18.218.68.142:5001/logout', {
       method: 'GET',
       credentials: 'include',
     })
@@ -112,7 +112,7 @@ function Profile() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    fetch('http://18.218.68.142:5001/recommendations', {
+    fetch('https://18.218.68.142:5001/recommendations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ function Profile() {
     stopCurrentAudio()
     e.preventDefault();
     const myPlaylist = playlist.map(item => item.uri);
-    fetch('http://18.218.68.142:5001/build', {
+    fetch('https://18.218.68.142:5001/build', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

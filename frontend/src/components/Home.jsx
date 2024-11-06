@@ -14,7 +14,7 @@ function Home() {
           your unique listening history and the most popular 
           playlists to make sure every track hits the right vibe. 
           Get ready to elevate your music experience!</p>
-        <a href="http://18.218.68.142:5001/login"><button>Connect to Spotify</button></a>      
+        <a href="https://18.218.68.142:5001/login"><button>Connect to Spotify</button></a>      
       </div>
     </div>
   );
