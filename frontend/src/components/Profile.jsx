@@ -80,7 +80,7 @@ function Profile() {
     })
       .then(response => {
         if (response.ok) {
-          window.location.href = 'http://localhost:5173/';
+          window.location.href = 'https://main.d30okcwstuwyij.amplifyapp.com/';
         } else {
           return response.json().then(errorData => {
             throw new Error(errorData.message || 'Logout failed.');
