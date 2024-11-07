@@ -113,13 +113,13 @@ function Profile() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    fetch('https://4eq83p312a.execute-api.us-east-2.amazonaws.com/recommendations', {
+    fetch('https://bzweuhkyn1.execute-api.us-east-2.amazonaws.com/recommendations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ ...formData }),
-      credentials: 'same-origin',
+      credentials: 'include',
     })
       .then(response => {
         if (!response.ok) {

@@ -234,12 +234,12 @@ def recommendations():
         num_of_songs = 100
         playlist_keywords = keywords[activity]
         playlists = fetch_user_playlists()
-        print(f'PLAYLISTS: {playlists}')
+        #print(f'PLAYLISTS: {playlists}')
         matching_playlists = [playlist['id'] for playlist in playlists if any(keyword in playlist['name'].lower() for keyword in playlist_keywords)]
         seed_artists, seed_genres = build_seed_arrays(matching_playlists, activity)
-        print(f'SEED ARTISTS: {seed_artists}')
+        #print(f'SEED ARTISTS: {seed_artists}')
         recommendations = get_recommendations(seed_artists, seed_genres, num_of_songs, activity)
-        print(f'RECS: {recommendations}')
+        #print(f'RECS: {recommendations}')
         response = jsonify(recommendations)
         return response
     except Exception as e:
