@@ -215,8 +215,15 @@ def logout():
         return jsonify({"message": f"Logout failed. {str(e)}"}), 500
 
 # builds new playlist for user on submit btn
-@application.route('/recommendations', methods=['POST'])
+@application.route('/recommendations', methods=['POST', 'OPTIONS'])
 def recommendations():
+    if request.method == 'OPTIONS':  # Preflight request
+        response = jsonify({"message": "CORS preflight request"})
+        response.headers.add('Access-Control-Allow-Origin', '*')  # Allow all origins, you can change '*' to specific domains
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')  # Allow POST and OPTIONS methods
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')  # Allow specific headers
+        return response
+    
     try:
         if 'access_token' not in credentials:  # Check if the user is authenticated
             return redirect('/login')
@@ -227,15 +234,19 @@ def recommendations():
         num_of_songs = 100
         playlist_keywords = keywords[activity]
         playlists = fetch_user_playlists()
+        print(f'PLAYLISTS: {playlists}')
         matching_playlists = [playlist['id'] for playlist in playlists if any(keyword in playlist['name'].lower() for keyword in playlist_keywords)]
         seed_artists, seed_genres = build_seed_arrays(matching_playlists, activity)
+        print(f'SEED ARTISTS: {seed_artists}')
         recommendations = get_recommendations(seed_artists, seed_genres, num_of_songs, activity)
+        print(f'RECS: {recommendations}')
         response = jsonify(recommendations)
         return response
     except Exception as e:
         print(f"Error: {str(e)}")  # Print the exception message
         return jsonify({"message": f"Unable to get song recommendations. {str(e)}"}), 500
-    
+
+  
 # once user is done adding/deleting songs, build playlist and send to spotify
 @application.route('/build', methods=['POST'])
 def build():
@@ -261,7 +272,7 @@ def build():
 
 
 def add_cors_headers(response):
-    response.headers.add('Access-Control-Allow-Origin', 'http://localhost:5173')
+    response.headers.add('Access-Control-Allow-Origin', 'https://main.d30okcwstuwyij.amplifyapp.com')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
