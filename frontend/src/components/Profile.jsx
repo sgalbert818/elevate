@@ -118,11 +118,8 @@ function Profile() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        playlistDuration: '30',
-        activity: 'workout', 
-      }),
-      credentials: 'include',
+      body: JSON.stringify({ ...formData }),
+      credentials: 'same-origin',
     })
       .then(response => {
         if (!response.ok) {
