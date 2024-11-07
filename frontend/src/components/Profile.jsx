@@ -113,7 +113,7 @@ function Profile() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    fetch('http://18.218.68.142:5001/build', {
+    fetch('https://4eq83p312a.execute-api.us-east-2.amazonaws.com/recommendations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
